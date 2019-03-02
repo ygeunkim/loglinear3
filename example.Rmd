@@ -28,6 +28,8 @@ source("r/_common.R")
 
 ## Data: Alcohol, cigarette, and marijuana use {-}
 
+from Agresti book
+
 ```{r, message=FALSE}
 (substance <-
   read_delim("data/Substance_use.dat", delim = " ") %>% 
