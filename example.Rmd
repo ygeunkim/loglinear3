@@ -1,0 +1,155 @@
+---
+title: "Loglinear models for three-way tables"
+author: |
+  | Young-geun Kim
+  | \href{mailto: dudrmshub@gmail.com}{gamil.com}
+date: "`r format(Sys.time(), '%d %b, %Y')`"
+output:
+  html_document: default
+indent: yes
+numbersections: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  comment = "#>",
+  collapse = TRUE,
+  out.width = "70%",
+  fig.align = "center",
+  fig.width = 6,
+  fig.asp = .618
+  )
+options(digits = 2)
+```
+
+```{r}
+source("r/_common.R")
+```
+
+## Data: Alcohol, cigarette, and marijuana use {-}
+
+```{r, message=FALSE}
+(substance <-
+  read_delim("data/Substance_use.dat", delim = " ") %>% 
+  mutate(alcohol = str_trim(alcohol)) %>% 
+  mutate_if(is.character, factor) %>% 
+  mutate_if(is.factor, fct_rev))
+```
+
+Long data format like above is easy to fit loglinear model.
+
+## Fitting GLMs
+
+### in hand
+
+```{r}
+subs_hierarchy <-
+  substance %>% 
+  do(
+    indep = glm(count ~ alcohol + cigarettes + marijuana, data = ., family = poisson()),
+    ac_m = glm(count ~ alcohol + cigarettes + marijuana + alcohol:cigarettes, 
+               data = ., family = poisson()),
+    amcm = glm(count ~ alcohol + cigarettes + marijuana + alcohol:marijuana + cigarettes:marijuana, 
+               data = ., family = poisson()),
+    acamcm = glm(count ~ alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana, 
+                 data = ., family = poisson()),
+    acm = glm(count ~ alcohol * cigarettes * marijuana, 
+              data = ., family = poisson())
+  )
+```
+
+### Defining function
+
+```{r}
+source("r/model_threeway.R")
+```
+
+```{r}
+model_loglin
+```
+
+```{r}
+(subs_hierarchy <- model_loglin(substance, yname = "count", glm_fam = poisson()))
+```
+
+## Chi-square Goodness-of-fit tests
+
+### Statistic
+
+$$G^2 = 2\sum n_{ijk}\ln\frac{n_{ijk}}{\hat\mu_{ijk}}$$
+
+$$X^2 = \sum\frac{(n_{ijk} - \hat\mu_{ijk})^2}{\hat\mu_{ijk}}$$
+
+with
+
+$$\text{residual df} = \text{the number of cell count} - \text{the number of non-redundant parameters}$$
+
+```{r}
+source("r/goodness_fit.R")
+```
+
+```{r}
+good_loglin
+```
+
+
+```{r, warning=FALSE}
+(subs_good <-
+  subs_hierarchy %>% 
+  map(good_loglin, test = "LRT") %>% 
+  bind_rows()) %>% 
+  pander::pander()
+```
+
+From $G^2$, we compare reduced model to complex model
+
+$$G^2(M_0 \mid M_1) = G^2(M_0) - G^2(M_1) \approx \chi^2\Big(df = df(M_0) - df(M_1)\Big)$$
+
+### Choosing the best model
+
+```{r}
+subs_good %>% 
+  rename(alternative = model) %>% 
+  group_by(Resid..Df) %>%
+  slice(which.min(Resid..Dev)) %>%
+  mutate(
+    goodness = c(Resid..Dev[1], -diff(Resid..Dev)),
+    df_good = c(Resid..Df[1], -diff(Resid..Df))
+  ) %>% 
+  mutate(p_value = pchisq(goodness, df = df_good, lower.tail = FALSE)) %>% 
+  pander::pander()
+```
+
+1. saturated model `(ACM)`: cannot reject $M_0$ with p-value `0.5408`, so we choose next model
+2. three factor interaction `(AC, AM, CM)`: reject $M_0$
+
+Thus, we use model `(AC, AM, CM)`
+
+## Fitted values
+
+```{r}
+source("r/fitted_val.R")
+```
+
+```{r}
+fit_loglin
+```
+
+```{r}
+subs_hierarchy %>% 
+  map(fit_loglin) %>% 
+  plyr::join_all(by = c("count", "alcohol", "cigarettes", "marijuana")) %>% 
+  pander::pander()
+```
+
+
+
+
+
+
+
+
+
+
+
+
