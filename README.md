@@ -1,6 +1,9 @@
 
 # Loglinear Models for Three-way tables
 
+> *Note: This is not an `r` package but just a set of `r` functions
+> aiming at one purpose.*
+
 ## Overview
 
 `R` codes to select the best models fitting three-way tables.

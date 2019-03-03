@@ -19,6 +19,8 @@ options(digits = 2)
 
 # Loglinear Models for Three-way tables
 
+> _Note: This is not an `r` package but just a set of `r` functions aiming at one purpose._
+
 ## Overview
 
 `R` codes to select the best models fitting three-way tables.
