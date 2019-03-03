@@ -1,5 +1,7 @@
 ---
-output: github_document
+output:
+  github_document:
+    pandoc_args: --webtex
 bibliography: datancode.bib
 ---
 
@@ -57,7 +59,7 @@ function `fit_loglin()`
 
 ***
 
-This file will show how these functions can be applied.
+Frow now on, this document will show how these functions can be applied.
 
 1. call `tidyverse` and `broom` libraries, and the other functions with `r/_common.R`
 2. fit with `model_loglin()`
@@ -65,25 +67,25 @@ This file will show how these functions can be applied.
 4. choosing the best model based on the goodness-of-fit statistic
 5. compute fitted values with `fitted_val`
 
-## Begin
+## Beginning
 
 ```{r}
-source("r/_common.R") # tidyverse and broom
+source("r/_common.R")
 ```
 
-Here we should modify `tidy` function of @broom. `tidy.anova()` is not defined for `anova.glm`, so we should add some lines against `warning messages`.
+`tidyverse` and `broom` are loaded. Here we should modify `tidy` function of @broom. `tidy.anova()` is not defined for `anova.glm`, so we should add more elements in `renamers` in the function. Using the original `tidy` gives `warning message`.
 
-```{r}
-tidy.anova
+```
+renamers <- c(
+    ...
+    "Ref.df" = "ref.df",
+    "Deviance" = "deviance", # glm object
+    "Resid. Df" = "resid.df", # glm object
+    "Resid. Dev" = "resid.dev" # glm object
+  )
 ```
 
-In addition,
-
-```{r}
-find_xname
-```
-
-This function would be used later to construct the various independence models.
+In addition, `find_xname()` function would be used later to construct the various independence models.
 
 ## Data: Alcohol, cigarette, and marijuana use {-}
 
@@ -99,7 +101,22 @@ Data from @Agresti:2012aa would be used.
   mutate_if(is.factor, fct_rev))
 ```
 
-Long data format as above is easy to fit loglinear model.
+Long data format as above is easy to fit loglinear model. Against wide format, i.e. contingency table, try `tidyr::gather()`.
+
+### Change to the long data format
+
+For example, look at the below table.
+
+```{r, message=FALSE}
+(aids <- read_table("data/AIDS.dat"))
+```
+
+```{r}
+aids %>% 
+  gather(yes, no, key = symptom, value = count)
+```
+
+Finally, we get the long data.
 
 ## Fitting GLMs
 
@@ -108,7 +125,7 @@ Long data format as above is easy to fit loglinear model.
 We can write every formula in hand. However, it is annoying.
 
 ```{r}
-subs_hierarchy <-
+(subs_hierarchy <-
   substance %>% 
   do(
     indep = glm(count ~ alcohol + cigarettes + marijuana, data = ., family = poisson()),
@@ -120,23 +137,33 @@ subs_hierarchy <-
                  data = ., family = poisson()),
     acm = glm(count ~ alcohol * cigarettes * marijuana, 
               data = ., family = poisson())
-  )
+  ))
 ```
 
 ### Defining function
+
+Function can be defined for more general usage. See `r/model_threeway.R`
 
 ```{r}
 source("r/model_threeway.R")
 ```
 
-Function can be defined for more general usage. This return `tibble` with list element. Each list has `glm` object with `[[1]]`
+`model_loglin()` fits loglinear model for every pair of independence model.
 
-```{r}
-model_loglin
-```
+- `.data`: data
+- `yname`: character, response variable
+- `glm_fam`: random component of glm, option for `family` of `glm()`. Since we are fitting loglinear model, `poisson()` is set to be default.
+
+It returns `tibble` with list element.
 
 ```{r}
 (subs_hierarchy <- model_loglin(substance, yname = "count", glm_fam = poisson()))
+```
+
+Each list has `glm` object with `[[1]]`.
+
+```{r}
+subs_hierarchy$indep[[1]]
 ```
 
 ## Chi-square Goodness-of-fit tests
@@ -147,19 +174,13 @@ $$G^2 = 2\sum n_{ijk}\ln\frac{n_{ijk}}{\hat\mu_{ijk}}$$
 
 $$X^2 = \sum\frac{(n_{ijk} - \hat\mu_{ijk})^2}{\hat\mu_{ijk}}$$
 
-with
-
-$$\text{residual df} = \text{the number of cell count} - \text{the number of non-redundant parameters}$$
+with **residual df = the number of cell count - the number of non-redundant parameters**
 
 ```{r}
 source("r/goodness_fit.R")
 ```
 
-```{r}
-good_loglin
-```
-
-`test = "LRT"` option of `anova.glm()` produces $G^2$. As noticed, this function _is designed to be_ applied with `purrr::map()`.
+`good_loglin()` calculates the above statistic for given option `test`. `test = "LRT"` option of `anova.glm()` produces $G^2$. `test = Chisq` gives $X^2$. As noticed, this function _is designed to be_ applied with `purrr::map()` and `dplyr::bind_rows()`.
 
 ```{r}
 (subs_good <-
@@ -200,9 +221,7 @@ Thus, **we use the model `(AC, AM, CM)`**
 source("r/fitted_val.R")
 ```
 
-```{r}
-fit_loglin
-```
+`fit_loglin()` computes fitted values for each independent model. Use this function with `purrr::map()` and `plyr::join_all()`. In `plyr::join_all()`, every variable name including response is written.
 
 ```{r}
 subs_hierarchy %>% 

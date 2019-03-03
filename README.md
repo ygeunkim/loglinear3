@@ -41,7 +41,7 @@ function `fit_loglin()`
 
 -----
 
-This file will show how these functions can be applied.
+Frow now on, this document will show how these functions can be applied.
 
 1.  call `tidyverse` and `broom` libraries, and the other functions with
     `r/_common.R`
@@ -50,10 +50,10 @@ This file will show how these functions can be applied.
 4.  choosing the best model based on the goodness-of-fit statistic
 5.  compute fitted values with `fitted_val`
 
-## Begin
+## Beginning
 
 ``` r
-source("r/_common.R") # tidyverse and broom
+source("r/_common.R")
 #> ── Attaching packages ────────────────────────────────────────────────── tidyverse 1.2.1 ──
 #> ✔ ggplot2 3.1.0       ✔ purrr   0.3.0  
 #> ✔ tibble  2.0.1       ✔ dplyr   0.8.0.1
@@ -64,52 +64,21 @@ source("r/_common.R") # tidyverse and broom
 #> ✖ dplyr::lag()    masks stats::lag()
 ```
 
-Here we should modify `tidy` function of tidymodels (2018).
-`tidy.anova()` is not defined for `anova.glm`, so we should add some
-lines against `warning messages`.
+`tidyverse` and `broom` are loaded. Here we should modify `tidy`
+function of tidymodels (2018). `tidy.anova()` is not defined for
+`anova.glm`, so we should add more elements in `renamers` in the
+function. Using the original `tidy` gives `warning message`.
 
-``` r
-tidy.anova
-#> function (x, ...) 
-#> {
-#>     renamers <- c(AIC = "AIC", BIC = "BIC", deviance = "deviance", 
-#>         logLik = "logLik", Df = "df", Chi.Df = "df", `Sum Sq` = "sumsq", 
-#>         `Mean Sq` = "meansq", `F value` = "statistic", `Pr(>F)` = "p.value", 
-#>         Res.Df = "res.df", RSS = "rss", `Sum of Sq` = "sumsq", 
-#>         F = "statistic", Chisq = "statistic", `P(>|Chi|)` = "p.value", 
-#>         `Pr(>Chi)` = "p.value", Pr..Chisq. = "p.value", Pr..Chi. = "p.value", 
-#>         p.value = "p.value", Chi.sq = "statistic", LR.Chisq = "statistic", 
-#>         `LR Chisq` = "statistic", edf = "edf", Ref.df = "ref.df", 
-#>         Deviance = "deviance", `Resid. Df` = "resid.df", `Resid. Dev` = "resid.dev")
-#>     names(renamers) <- make.names(names(renamers))
-#>     ret <- fix_data_frame(x)
-#>     unknown_cols <- setdiff(colnames(ret), c("term", names(renamers)))
-#>     if (length(unknown_cols) > 0) {
-#>         warning("The following column names in ANOVA output were not ", 
-#>             "recognized or transformed: ", paste(unknown_cols, 
-#>                 collapse = ", "))
-#>     }
-#>     colnames(ret) <- dplyr::recode(colnames(ret), !!!renamers)
-#>     if ("term" %in% names(ret)) {
-#>         ret <- mutate(ret, term = stringr::str_trim(term))
-#>     }
-#>     as_tibble(ret)
-#> }
-```
+    renamers <- c(
+        ...
+        "Ref.df" = "ref.df",
+        "Deviance" = "deviance", # glm object
+        "Resid. Df" = "resid.df", # glm object
+        "Resid. Dev" = "resid.dev" # glm object
+      )
 
-In addition,
-
-``` r
-find_xname
-#> function (fit) 
-#> {
-#>     x_term <- fit[[1]] %>% terms() %>% attr("term.labels")
-#>     paste(x_term, collapse = " + ")
-#> }
-```
-
-This function would be used later to construct the various independence
-models.
+In addition, `find_xname()` function would be used later to construct
+the various independence models.
 
 ## Data: Alcohol, cigarette, and marijuana use
 
@@ -140,7 +109,41 @@ Data from Agresti (2012) would be used.
 #> 8 no      no         no          279
 ```
 
-Long data format as above is easy to fit loglinear model.
+Long data format as above is easy to fit loglinear model. Against wide
+format, i.e. contingency table, try `tidyr::gather()`.
+
+### Change to the long data format
+
+For example, look at the below table.
+
+``` r
+(aids <- read_table("data/AIDS.dat"))
+#> # A tibble: 4 x 4
+#>   race  azt     yes    no
+#>   <chr> <chr> <dbl> <dbl>
+#> 1 white yes      14    93
+#> 2 white no       32    81
+#> 3 black yes      11    52
+#> 4 black no       12    43
+```
+
+``` r
+aids %>% 
+  gather(yes, no, key = symptom, value = count)
+#> # A tibble: 8 x 4
+#>   race  azt   symptom count
+#>   <chr> <chr> <chr>   <dbl>
+#> 1 white yes   yes        14
+#> 2 white no    yes        32
+#> 3 black yes   yes        11
+#> 4 black no    yes        12
+#> 5 white yes   no         93
+#> 6 white no    no         81
+#> 7 black yes   no         52
+#> 8 black no    no         43
+```
+
+Finally, we get the long data.
 
 ## Fitting GLMs
 
@@ -149,7 +152,7 @@ Long data format as above is easy to fit loglinear model.
 We can write every formula in hand. However, it is annoying.
 
 ``` r
-subs_hierarchy <-
+(subs_hierarchy <-
   substance %>% 
   do(
     indep = glm(count ~ alcohol + cigarettes + marijuana, data = ., family = poisson()),
@@ -161,50 +164,32 @@ subs_hierarchy <-
                  data = ., family = poisson()),
     acm = glm(count ~ alcohol * cigarettes * marijuana, 
               data = ., family = poisson())
-  )
+  ))
+#> # A tibble: 1 x 5
+#>   indep     ac_m      amcm      acamcm    acm      
+#>   <list>    <list>    <list>    <list>    <list>   
+#> 1 <S3: glm> <S3: glm> <S3: glm> <S3: glm> <S3: glm>
 ```
 
 ### Defining function
+
+Function can be defined for more general usage. See `r/model_threeway.R`
 
 ``` r
 source("r/model_threeway.R")
 ```
 
-Function can be defined for more general usage. This return `tibble`
-with list element. Each list has `glm` object with `[[1]]`
+`model_loglin()` fits loglinear model for every pair of independence
+model.
 
-``` r
-model_loglin
-#> function (.data, yname, glm_fam = poisson(), ...) 
-#> {
-#>     xname <- .data %>% select(-yname) %>% names()
-#>     two_int <- apply(combn(3, 2), 2, function(x) {
-#>         xname[x] %>% paste0(collapse = ":")
-#>     })
-#>     mutual <- paste(yname, ".", sep = "~") %>% as.formula()
-#>     two <- paste(yname, ".^2", sep = "~")
-#>     jt1 <- paste(two, two_int[1], two_int[2], sep = "-") %>% 
-#>         as.formula()
-#>     jt2 <- paste(two, two_int[1], two_int[3], sep = "-") %>% 
-#>         as.formula()
-#>     jt3 <- paste(two, two_int[2], two_int[3], sep = "-") %>% 
-#>         as.formula()
-#>     cond1 <- paste(two, two_int[1], sep = "-") %>% as.formula()
-#>     cond2 <- paste(two, two_int[2], sep = "-") %>% as.formula()
-#>     cond3 <- paste(two, two_int[3], sep = "-") %>% as.formula()
-#>     two <- two %>% as.formula()
-#>     three <- paste(yname, ".^3", sep = "~") %>% as.formula()
-#>     .data %>% do(indep = glm(formula = mutual, data = ., family = glm_fam), 
-#>         joint1 = glm(formula = jt1, data = ., family = glm_fam), 
-#>         joint2 = glm(formula = jt2, data = ., family = glm_fam), 
-#>         joint3 = glm(formula = jt3, data = ., family = glm_fam), 
-#>         conditional1 = glm(formula = cond1, data = ., family = glm_fam), 
-#>         conditional2 = glm(formula = cond2, data = ., family = glm_fam), 
-#>         conditional3 = glm(formula = cond3, data = ., family = glm_fam), 
-#>         homogen = glm(formula = two, data = ., family = glm_fam), 
-#>         threefac = glm(formula = three, data = ., family = glm_fam))
-#> }
-```
+  - `.data`: data
+  - `yname`: character, response variable
+  - `glm_fam`: random component of glm, option for `family` of `glm()`.
+    Since we are fitting loglinear model, `poisson()` is set to be
+    default.
+
+It returns `tibble` with list
+element.
 
 ``` r
 (subs_hierarchy <- model_loglin(substance, yname = "count", glm_fam = poisson()))
@@ -215,35 +200,49 @@ model_loglin
 #> # … with 1 more variable: threefac <list>
 ```
 
+Each list has `glm` object with `[[1]]`.
+
+``` r
+subs_hierarchy$indep[[1]]
+#> 
+#> Call:  glm(formula = mutual, family = glm_fam, data = .)
+#> 
+#> Coefficients:
+#>  (Intercept)     alcoholno  cigarettesno   marijuanano  
+#>        6.292        -1.785        -0.649         0.315  
+#> 
+#> Degrees of Freedom: 7 Total (i.e. Null);  4 Residual
+#> Null Deviance:       2850 
+#> Residual Deviance: 1290  AIC: 1340
+```
+
 ## Chi-square Goodness-of-fit tests
 
 ### Statistic
 
-\[G^2 = 2\sum n_{ijk}\ln\frac{n_{ijk}}{\hat\mu_{ijk}}\]
+  
+![G^2 = 2\\sum
+n\_{ijk}\\ln\\frac{n\_{ijk}}{\\hat\\mu\_{ijk}}](https://latex.codecogs.com/png.latex?G%5E2%20%3D%202%5Csum%20n_%7Bijk%7D%5Cln%5Cfrac%7Bn_%7Bijk%7D%7D%7B%5Chat%5Cmu_%7Bijk%7D%7D
+"G^2 = 2\\sum n_{ijk}\\ln\\frac{n_{ijk}}{\\hat\\mu_{ijk}}")  
 
-\[X^2 = \sum\frac{(n_{ijk} - \hat\mu_{ijk})^2}{\hat\mu_{ijk}}\]
+  
+![X^2 = \\sum\\frac{(n\_{ijk} -
+\\hat\\mu\_{ijk})^2}{\\hat\\mu\_{ijk}}](https://latex.codecogs.com/png.latex?X%5E2%20%3D%20%5Csum%5Cfrac%7B%28n_%7Bijk%7D%20-%20%5Chat%5Cmu_%7Bijk%7D%29%5E2%7D%7B%5Chat%5Cmu_%7Bijk%7D%7D
+"X^2 = \\sum\\frac{(n_{ijk} - \\hat\\mu_{ijk})^2}{\\hat\\mu_{ijk}}")  
 
-with
-
-\[\text{residual df} = \text{the number of cell count} - \text{the number of non-redundant parameters}\]
+with **residual df = the number of cell count - the number of
+non-redundant parameters**
 
 ``` r
 source("r/goodness_fit.R")
 ```
 
-``` r
-good_loglin
-#> function (x, test = "LRT", ...) 
-#> {
-#>     mod_name <- find_xname(x)
-#>     tidy(anova(x[[1]], test = test, ...)) %>% slice(n()) %>% 
-#>         add_column(model = mod_name, .before = 1) %>% select(-term, 
-#>         -deviance, -p.value)
-#> }
-```
-
-`test = "LRT"` option of `anova.glm()` produces \(G^2\). As noticed,
-this function *is designed to be* applied with `purrr::map()`.
+`good_loglin()` calculates the above statistic for given option `test`.
+`test = "LRT"` option of `anova.glm()` produces
+![G^2](https://latex.codecogs.com/png.latex?G%5E2 "G^2"). `test = Chisq`
+gives ![X^2](https://latex.codecogs.com/png.latex?X%5E2 "X^2"). As
+noticed, this function *is designed to be* applied with `purrr::map()`
+and `dplyr::bind_rows()`.
 
 ``` r
 (subs_good <-
@@ -267,10 +266,14 @@ this function *is designed to be* applied with `purrr::map()`.
 
 ### Choosing the best model
 
-From \(G^2\), we compare reduced model to complex
-model
+From ![G^2](https://latex.codecogs.com/png.latex?G%5E2 "G^2"), we
+compare reduced model to complex model
 
-\[G^2(M_0 \mid M_1) = G^2(M_0) - G^2(M_1) \approx \chi^2\Big(df = df(M_0) - df(M_1)\Big)\]
+  
+![G^2(M\_0 \\mid M\_1) = G^2(M\_0) - G^2(M\_1) \\approx \\chi^2\\Big(df
+= df(M\_0) -
+df(M\_1)\\Big)](https://latex.codecogs.com/png.latex?G%5E2%28M_0%20%5Cmid%20M_1%29%20%3D%20G%5E2%28M_0%29%20-%20G%5E2%28M_1%29%20%5Capprox%20%5Cchi%5E2%5CBig%28df%20%3D%20df%28M_0%29%20-%20df%28M_1%29%5CBig%29
+"G^2(M_0 \\mid M_1) = G^2(M_0) - G^2(M_1) \\approx \\chi^2\\Big(df = df(M_0) - df(M_1)\\Big)")  
 
 ``` r
 subs_good %>% 
@@ -304,9 +307,11 @@ Table continues below
 |    3     | 1.837e-115 |
 |    4     | 3.574e-277 |
 
-1.  `(AC, AM, CM)` vs saturated model `(ACM)`: cannot reject \(M_0\)
-    with p-value `0.5408`, so we choose `(AC, AM, CM)`
-2.  `(A, CM)` vs `(AC, AM, CM)`: reject \(M_0\)
+1.  `(AC, AM, CM)` vs saturated model `(ACM)`: cannot reject
+    ![M\_0](https://latex.codecogs.com/png.latex?M_0 "M_0") with p-value
+    `0.5408`, so we choose `(AC, AM, CM)`
+2.  `(A, CM)` vs `(AC, AM, CM)`: reject
+    ![M\_0](https://latex.codecogs.com/png.latex?M_0 "M_0")
 
 Thus, **we use the model `(AC, AM, CM)`**
 
@@ -316,16 +321,9 @@ Thus, **we use the model `(AC, AM, CM)`**
 source("r/fitted_val.R")
 ```
 
-``` r
-fit_loglin
-#> function (x, ...) 
-#> {
-#>     mod_name <- find_xname(x)
-#>     x[[1]]$model %>% bind_cols(predict(x[[1]], newdata = ., type = "response", 
-#>         ...) %>% tbl_df()) %>% rename_at(.vars = vars(value), 
-#>         .funs = list(~return(mod_name)))
-#> }
-```
+`fit_loglin()` computes fitted values for each independent model. Use
+this function with `purrr::map()` and `plyr::join_all()`. In
+`plyr::join_all()`, every variable name including response is written.
 
 ``` r
 subs_hierarchy %>% 
