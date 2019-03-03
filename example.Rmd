@@ -22,9 +22,24 @@ knitr::opts_chunk$set(
 options(digits = 2)
 ```
 
+
 ```{r}
-source("r/_common.R")
+source("r/_common.R") # tidyverse and broom
 ```
+
+Here we should modify `tidy` function. `tidy.anova()` is not defined for `anova.glm`, so we should add some lines against `warning messages`.
+
+```{r}
+tidy.anova
+```
+
+In addition,
+
+```{r}
+find_xname
+```
+
+This function would be used later to construct the independence model.
 
 ## Data: Alcohol, cigarette, and marijuana use {-}
 
@@ -40,9 +55,9 @@ from Agresti book
 
 Long data format like above is easy to fit loglinear model.
 
-## Fitting GLMs
+# Fitting GLMs
 
-### in hand
+## in hand
 
 ```{r}
 subs_hierarchy <-
@@ -60,11 +75,13 @@ subs_hierarchy <-
   )
 ```
 
-### Defining function
+## Defining function
 
 ```{r}
 source("r/model_threeway.R")
 ```
+
+Function can be defined for more general usage. This return `tibble` with list element. Each list has `glm` object.
 
 ```{r}
 model_loglin
@@ -95,7 +112,7 @@ good_loglin
 ```
 
 
-```{r, warning=FALSE}
+```{r}
 (subs_good <-
   subs_hierarchy %>% 
   map(good_loglin, test = "LRT") %>% 
@@ -112,11 +129,11 @@ $$G^2(M_0 \mid M_1) = G^2(M_0) - G^2(M_1) \approx \chi^2\Big(df = df(M_0) - df(M
 ```{r}
 subs_good %>% 
   rename(alternative = model) %>% 
-  group_by(Resid..Df) %>%
-  slice(which.min(Resid..Dev)) %>%
+  group_by(resid.df) %>%
+  slice(which.min(resid.dev)) %>%
   mutate(
-    goodness = c(Resid..Dev[1], -diff(Resid..Dev)),
-    df_good = c(Resid..Df[1], -diff(Resid..Df))
+    goodness = c(resid.dev[1], -diff(resid.dev)),
+    df_good = c(resid.df[1], -diff(resid.df))
   ) %>% 
   mutate(p_value = pchisq(goodness, df = df_good, lower.tail = FALSE)) %>% 
   pander::pander()
@@ -143,14 +160,6 @@ subs_hierarchy %>%
   plyr::join_all(by = c("count", "alcohol", "cigarettes", "marijuana")) %>% 
   pander::pander()
 ```
-
-
-
-
-
-
-
-
 
 
 

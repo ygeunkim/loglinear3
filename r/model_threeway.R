@@ -1,4 +1,20 @@
+#------------------------------------------#
+# Modeling every type of independece model #
+# for three-way tables                     #
+#------------------------------------------#
+# indep: mutual independence, (X, Y, Z)
+# joint1, joint2, joint3: joint independence, (XY, Z)
+# conditional1, conditional2, conditional3: conditional independence, (XZ, YZ)
+# homogen: homogeneous association / no three-factor interaction, (XY, YZ, XZ)
+# three: three-factor interaction / saturated model, (XYZ)
+#-------------------------------------------
+
 model_loglin <- function(.data, yname, glm_fam = gaussian(), ...) {
+  #------------------------------------------------------------------------------#
+  # .data to be fit glm                                                          #
+  # yname character object which is response variable                            #
+  # glm_fam function corresponding to family option of glm(), error distribution #
+  #------------------------------------------------------------------------------#
   xname <-
     .data %>% 
     select(-yname) %>% 
