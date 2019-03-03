@@ -16,6 +16,11 @@ find_xname <- function(fit) {
   paste(x_term, collapse = " + ")
 }
 
+#------------------------------------------------------------------------
+# tidy.anova() does not support column names of anova.glm
+# so add some of them
+# https://github.com/tidymodels/broom/blob/master/R/stats-anova-tidiers.R
+#------------------------------------------------------------------------
 tidy.anova <- function(x, ...) {
   renamers <- c(
     "AIC" = "AIC",              # merMod
@@ -44,12 +49,12 @@ tidy.anova <- function(x, ...) {
     "edf" = "edf",
     "Ref.df" = "ref.df",
     "Deviance" = "deviance", # glm object
-    "Resid. Df" = "resid.df",
-    "Resid. Dev" = "resid.dev"
+    "Resid. Df" = "resid.df", # glm object
+    "Resid. Dev" = "resid.dev" # glm object
   )
-  
+
   names(renamers) <- make.names(names(renamers))
-  
+
   ret <- fix_data_frame(x)
   unknown_cols <- setdiff(colnames(ret), c("term", names(renamers)))
   if (length(unknown_cols) > 0) {
@@ -59,9 +64,9 @@ tidy.anova <- function(x, ...) {
       paste(unknown_cols, collapse = ", ")
     )
   }
-  
+
   colnames(ret) <- dplyr::recode(colnames(ret), !!!renamers)
-  
+
   if("term" %in% names(ret)){
     # if rows had names, strip whitespace in them
     ret <- mutate(ret, term = stringr::str_trim(term))

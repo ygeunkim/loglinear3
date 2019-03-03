@@ -2,12 +2,13 @@
 title: "Loglinear models for three-way tables"
 author: |
   | Young-geun Kim
-  | \href{mailto: dudrmshub@gmail.com}{gamil.com}
+  | [dudrmshub@gmail.com](mailto:dudrmshub@gmail.com)
 date: "`r format(Sys.time(), '%d %b, %Y')`"
 output:
   html_document: default
 indent: yes
 numbersections: yes
+bibliography: datancode.bib
 ---
 
 ```{r setup, include=FALSE}
@@ -27,7 +28,7 @@ options(digits = 2)
 source("r/_common.R") # tidyverse and broom
 ```
 
-Here we should modify `tidy` function. `tidy.anova()` is not defined for `anova.glm`, so we should add some lines against `warning messages`.
+Here we should modify `tidy` function of @broom. `tidy.anova()` is not defined for `anova.glm`, so we should add some lines against `warning messages`.
 
 ```{r}
 tidy.anova
@@ -39,11 +40,13 @@ In addition,
 find_xname
 ```
 
-This function would be used later to construct the independence model.
+This function would be used later to construct the various independence models.
 
 ## Data: Alcohol, cigarette, and marijuana use {-}
 
-from Agresti book
+Data from @Agresti:2012aa would be used.
+
+> refers to a survey by the Wright State University School of Medicine and the United Health Services in Dayton, Ohio. The survey asked 2276 students in their final year of high school in a nonurban area near Dayton, Ohio, whether they had ever used alcohol, cigarettes, or maijuana.
 
 ```{r, message=FALSE}
 (substance <-
@@ -53,11 +56,13 @@ from Agresti book
   mutate_if(is.factor, fct_rev))
 ```
 
-Long data format like above is easy to fit loglinear model.
+Long data format as above is easy to fit loglinear model.
 
 # Fitting GLMs
 
 ## in hand
+
+We can write every formula in hand. However, it is annoying.
 
 ```{r}
 subs_hierarchy <-
@@ -81,7 +86,7 @@ subs_hierarchy <-
 source("r/model_threeway.R")
 ```
 
-Function can be defined for more general usage. This return `tibble` with list element. Each list has `glm` object.
+Function can be defined for more general usage. This return `tibble` with list element. Each list has `glm` object with `[[1]]`
 
 ```{r}
 model_loglin
@@ -111,6 +116,7 @@ source("r/goodness_fit.R")
 good_loglin
 ```
 
+`test = "LRT"` option of `anova.glm()` produces $G^2$. As noticed, this function _is designed to be_ applied with `purrr::map()`.
 
 ```{r}
 (subs_good <-
@@ -120,17 +126,18 @@ good_loglin
   pander::pander()
 ```
 
+### Choosing the best model
+
 From $G^2$, we compare reduced model to complex model
 
 $$G^2(M_0 \mid M_1) = G^2(M_0) - G^2(M_1) \approx \chi^2\Big(df = df(M_0) - df(M_1)\Big)$$
 
-### Choosing the best model
-
 ```{r}
 subs_good %>% 
   rename(alternative = model) %>% 
-  group_by(resid.df) %>%
-  slice(which.min(resid.dev)) %>%
+  group_by(resid.df) %>% 
+  slice(which.min(resid.dev)) %>% 
+  arrange(resid.df) %>% 
   mutate(
     goodness = c(resid.dev[1], -diff(resid.dev)),
     df_good = c(resid.df[1], -diff(resid.df))
@@ -139,10 +146,10 @@ subs_good %>%
   pander::pander()
 ```
 
-1. saturated model `(ACM)`: cannot reject $M_0$ with p-value `0.5408`, so we choose next model
-2. three factor interaction `(AC, AM, CM)`: reject $M_0$
+1. `(AC, AM, CM)` vs saturated model `(ACM)`: cannot reject $M_0$ with p-value `0.5408`, so we choose `(AC, AM, CM)`
+2. `(A, CM)` vs `(AC, AM, CM)`: reject $M_0$
 
-Thus, we use model `(AC, AM, CM)`
+Thus, **we use the model `(AC, AM, CM)`**
 
 ## Fitted values
 

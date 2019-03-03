@@ -370,7 +370,7 @@ $(document).ready(function () {
 
 <h1 class="title toc-ignore">Loglinear models for three-way tables</h1>
 <h4 class="author"><em><div class="line-block">Young-geun Kim<br />
-</div></em></h4>
+<a href="mailto:dudrmshub@gmail.com">dudrmshub@gmail.com</a></div></em></h4>
 <h4 class="date"><em>03 Mar, 2019</em></h4>
 
 </div>
@@ -385,7 +385,7 @@ $(document).ready(function () {
 #&gt; ── Conflicts ───────────────────────────────────────────────────── tidyverse_conflicts() ──
 #&gt; ✖ dplyr::filter() masks stats::filter()
 #&gt; ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<p>Here we should modify <code>tidy</code> function. <code>tidy.anova()</code> is not defined for <code>anova.glm</code>, so we should add some lines against <code>warning messages</code>.</p>
+<p>Here we should modify <code>tidy</code> function of <span class="citation">tidymodels (2018)</span>. <code>tidy.anova()</code> is not defined for <code>anova.glm</code>, so we should add some lines against <code>warning messages</code>.</p>
 <pre class="r"><code>tidy.anova
 #&gt; function (x, ...) 
 #&gt; {
@@ -419,10 +419,13 @@ $(document).ready(function () {
 #&gt;     x_term &lt;- fit[[1]] %&gt;% terms() %&gt;% attr(&quot;term.labels&quot;)
 #&gt;     paste(x_term, collapse = &quot; + &quot;)
 #&gt; }</code></pre>
-<p>This function would be used later to construct the independence model.</p>
+<p>This function would be used later to construct the various independence models.</p>
 <div id="data-alcohol-cigarette-and-marijuana-use" class="section level2 unnumbered">
 <h2>Data: Alcohol, cigarette, and marijuana use</h2>
-<p>from Agresti book</p>
+<p>Data from <span class="citation">Agresti (2012)</span> would be used.</p>
+<blockquote>
+<p>refers to a survey by the Wright State University School of Medicine and the United Health Services in Dayton, Ohio. The survey asked 2276 students in their final year of high school in a nonurban area near Dayton, Ohio, whether they had ever used alcohol, cigarettes, or maijuana.</p>
+</blockquote>
 <pre class="r"><code>(substance &lt;-
   read_delim(&quot;data/Substance_use.dat&quot;, delim = &quot; &quot;) %&gt;% 
   mutate(alcohol = str_trim(alcohol)) %&gt;% 
@@ -439,12 +442,13 @@ $(document).ready(function () {
 #&gt; 6 no      yes        no           43
 #&gt; 7 no      no         yes           2
 #&gt; 8 no      no         no          279</code></pre>
-<p>Long data format like above is easy to fit loglinear model.</p>
+<p>Long data format as above is easy to fit loglinear model.</p>
 </div>
 <div id="fitting-glms" class="section level1">
 <h1>Fitting GLMs</h1>
 <div id="in-hand" class="section level2">
 <h2>in hand</h2>
+<p>We can write every formula in hand. However, it is annoying.</p>
 <pre class="r"><code>subs_hierarchy &lt;-
   substance %&gt;% 
   do(
@@ -462,7 +466,7 @@ $(document).ready(function () {
 <div id="defining-function" class="section level2">
 <h2>Defining function</h2>
 <pre class="r"><code>source(&quot;r/model_threeway.R&quot;)</code></pre>
-<p>Function can be defined for more general usage. This return <code>tibble</code> with list element. Each list has <code>glm</code> object.</p>
+<p>Function can be defined for more general usage. This return <code>tibble</code> with list element. Each list has <code>glm</code> object with <code>[[1]]</code></p>
 <pre class="r"><code>model_loglin
 #&gt; function (.data, yname, glm_fam = gaussian(), ...) 
 #&gt; {
@@ -517,6 +521,7 @@ $(document).ready(function () {
 #&gt;         add_column(model = mod_name, .before = 1) %&gt;% select(-term, 
 #&gt;         -deviance, -p.value)
 #&gt; }</code></pre>
+<p><code>test = &quot;LRT&quot;</code> option of <code>anova.glm()</code> produces <span class="math inline">\(G^2\)</span>. As noticed, this function <em>is designed to be</em> applied with <code>purrr::map()</code>.</p>
 <pre class="r"><code>(subs_good &lt;-
   subs_hierarchy %&gt;% 
   map(good_loglin, test = &quot;LRT&quot;) %&gt;% 
@@ -594,15 +599,16 @@ $(document).ready(function () {
 </tr>
 </tbody>
 </table>
-<p>From <span class="math inline">\(G^2\)</span>, we compare reduced model to complex model</p>
-<p><span class="math display">\[G^2(M_0 \mid M_1) = G^2(M_0) - G^2(M_1) \approx \chi^2\Big(df = df(M_0) - df(M_1)\Big)\]</span></p>
 </div>
 <div id="choosing-the-best-model" class="section level3">
 <h3>Choosing the best model</h3>
+<p>From <span class="math inline">\(G^2\)</span>, we compare reduced model to complex model</p>
+<p><span class="math display">\[G^2(M_0 \mid M_1) = G^2(M_0) - G^2(M_1) \approx \chi^2\Big(df = df(M_0) - df(M_1)\Big)\]</span></p>
 <pre class="r"><code>subs_good %&gt;% 
   rename(alternative = model) %&gt;% 
-  group_by(resid.df) %&gt;%
-  slice(which.min(resid.dev)) %&gt;%
+  group_by(resid.df) %&gt;% 
+  slice(which.min(resid.dev)) %&gt;% 
+  arrange(resid.df) %&gt;% 
   mutate(
     goodness = c(resid.dev[1], -diff(resid.dev)),
     df_good = c(resid.df[1], -diff(resid.df))
@@ -700,10 +706,10 @@ $(document).ready(function () {
 </tbody>
 </table>
 <ol style="list-style-type: decimal">
-<li>saturated model <code>(ACM)</code>: cannot reject <span class="math inline">\(M_0\)</span> with p-value <code>0.5408</code>, so we choose next model</li>
-<li>three factor interaction <code>(AC, AM, CM)</code>: reject <span class="math inline">\(M_0\)</span></li>
+<li><code>(AC, AM, CM)</code> vs saturated model <code>(ACM)</code>: cannot reject <span class="math inline">\(M_0\)</span> with p-value <code>0.5408</code>, so we choose <code>(AC, AM, CM)</code></li>
+<li><code>(A, CM)</code> vs <code>(AC, AM, CM)</code>: reject <span class="math inline">\(M_0\)</span></li>
 </ol>
-<p>Thus, we use model <code>(AC, AM, CM)</code></p>
+<p>Thus, <strong>we use the model <code>(AC, AM, CM)</code></strong></p>
 </div>
 </div>
 <div id="fitted-values" class="section level2">
@@ -985,6 +991,14 @@ $(document).ready(function () {
 </tr>
 </tbody>
 </table>
+<div id="refs" class="references">
+<div id="ref-Agresti:2012aa">
+<p>Agresti, Alan. 2012. <em>Categorical Data Analysis</em>. 3rd ed. Wiley.</p>
+</div>
+<div id="ref-broom">
+<p>tidymodels. 2018. “Stats-Anova-tidiers.R.” <a href="https://github.com/tidymodels/broom/blob/master/R/stats-anova-tidiers.R">https://github.com/tidymodels/broom/blob/master/R/stats-anova-tidiers.R</a>.</p>
+</div>
+</div>
 </div>
 </div>
 
