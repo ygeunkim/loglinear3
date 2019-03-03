@@ -255,17 +255,17 @@ and `dplyr::bind_rows()`.
   pander::pander()
 ```
 
-|                                                              model                                                              | df | resid.df |  resid.dev  |
-| :-----------------------------------------------------------------------------------------------------------------------------: | :-: | :------: | :---------: |
-|                                                alcohol + cigarettes + marijuana                                                 | 1  |    4     |    1286     |
-|                                     alcohol + cigarettes + marijuana + cigarettes:marijuana                                     | 1  |    3     |    534.2    |
-|                                      alcohol + cigarettes + marijuana + alcohol:marijuana                                       | 1  |    3     |    939.6    |
-|                                      alcohol + cigarettes + marijuana + alcohol:cigarettes                                      | 1  |    3     |    843.8    |
-|                           alcohol + cigarettes + marijuana + alcohol:marijuana + cigarettes:marijuana                           | 1  |    2     |    187.8    |
-|                          alcohol + cigarettes + marijuana + alcohol:cigarettes + cigarettes:marijuana                           | 1  |    2     |    92.02    |
-|                            alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana                            | 1  |    2     |    497.4    |
-|                alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana                 | 1  |    1     |    0.374    |
-| alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana + alcohol:cigarettes:marijuana | 1  |    0     | \-4.152e-14 |
+|                                                              model                                                              | df | resid.df | resid.dev |
+| :-----------------------------------------------------------------------------------------------------------------------------: | :-: | :------: | :-------: |
+|                                                alcohol + cigarettes + marijuana                                                 | 1  |    4     |   1286    |
+|                                     alcohol + cigarettes + marijuana + cigarettes:marijuana                                     | 1  |    3     |   534.2   |
+|                                      alcohol + cigarettes + marijuana + alcohol:marijuana                                       | 1  |    3     |   939.6   |
+|                                      alcohol + cigarettes + marijuana + alcohol:cigarettes                                      | 1  |    3     |   843.8   |
+|                           alcohol + cigarettes + marijuana + alcohol:marijuana + cigarettes:marijuana                           | 1  |    2     |   187.8   |
+|                          alcohol + cigarettes + marijuana + alcohol:cigarettes + cigarettes:marijuana                           | 1  |    2     |   92.02   |
+|                            alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana                            | 1  |    2     |   497.4   |
+|                alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana                 | 1  |    1     |   0.374   |
+| alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana + alcohol:cigarettes:marijuana | 1  |    0     |     0     |
 
 ### Choosing the best model
 
@@ -292,23 +292,23 @@ subs_good %>%
   pander::pander()
 ```
 
-|                                                           alternative                                                           | df | resid.df |  resid.dev  |  goodness   |
-| :-----------------------------------------------------------------------------------------------------------------------------: | :-: | :------: | :---------: | :---------: |
-| alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana + alcohol:cigarettes:marijuana | 1  |    0     | \-4.152e-14 | \-4.152e-14 |
-|                alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana                 | 1  |    1     |    0.374    |    0.374    |
-|                          alcohol + cigarettes + marijuana + alcohol:cigarettes + cigarettes:marijuana                           | 1  |    2     |    92.02    |    92.02    |
-|                                     alcohol + cigarettes + marijuana + cigarettes:marijuana                                     | 1  |    3     |    534.2    |    534.2    |
-|                                                alcohol + cigarettes + marijuana                                                 | 1  |    4     |    1286     |    1286     |
+|                                                           alternative                                                           | df | resid.df | resid.dev | goodness |
+| :-----------------------------------------------------------------------------------------------------------------------------: | :-: | :------: | :-------: | :------: |
+| alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana + alcohol:cigarettes:marijuana | 1  |    0     |     0     |    0     |
+|                alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana                 | 1  |    1     |   0.374   |  0.374   |
+|                          alcohol + cigarettes + marijuana + alcohol:cigarettes + cigarettes:marijuana                           | 1  |    2     |   92.02   |  92.02   |
+|                                     alcohol + cigarettes + marijuana + cigarettes:marijuana                                     | 1  |    3     |   534.2   |  534.2   |
+|                                                alcohol + cigarettes + marijuana                                                 | 1  |    4     |   1286    |   1286   |
 
 Table continues below
 
-| df\_good |  p\_value  |
-| :------: | :--------: |
-|    0     |     1      |
-|    1     |   0.5408   |
-|    2     | 1.043e-20  |
-|    3     | 1.837e-115 |
-|    4     | 3.574e-277 |
+| df\_good | p\_value |
+| :------: | :------: |
+|    0     |    1     |
+|    1     |  0.541   |
+|    2     |    0     |
+|    3     |    0     |
+|    4     |    0     |
 
 1.  `(AC, AM, CM)` vs saturated model `(ACM)`: cannot reject
     ![M\_0](https://latex.codecogs.com/png.latex?M_0 "M_0") with p-value
@@ -371,7 +371,7 @@ below
 |                         289.1                         |                                    555.2                                    |
 |                         19.4                          |                                    4.76                                     |
 |                         26.6                          |                                    142.2                                    |
-|                         118.5                         |                                   0.2396                                    |
+|                         118.5                         |                                    0.24                                     |
 |                         162.5                         |                                    179.8                                    |
 
 Table continues
@@ -383,7 +383,7 @@ below
 |                                    563.1                                     |                                    739                                    |
 |                                    29.45                                     |                                    245                                    |
 |                                    470.6                                     |                                    255                                    |
-|                                    28.12                                     |                                  0.7034                                   |
+|                                    28.12                                     |                                   0.703                                   |
 |                                    17.88                                     |                                   45.3                                    |
 |                                    16.55                                     |                                   4.297                                   |
 |                                    264.4                                     |                                   276.7                                   |

@@ -14,7 +14,8 @@ knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .618
   )
-options(digits = 2)
+options(digits = 3)
+pander::panderOptions("round", 3)
 ```
 
 # Loglinear Models for Three-way tables
