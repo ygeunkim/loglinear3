@@ -1,13 +1,5 @@
 ---
-title: "Loglinear models for three-way tables"
-author: |
-  | Young-geun Kim
-  | [dudrmshub@gmail.com](mailto:dudrmshub@gmail.com)
-date: "`r format(Sys.time(), '%d %b, %Y')`"
-output:
-  html_document: default
-indent: yes
-numbersections: yes
+output: github_document
 bibliography: datancode.bib
 ---
 
@@ -23,6 +15,57 @@ knitr::opts_chunk$set(
 options(digits = 2)
 ```
 
+# Loglinear Models for Three-way tables
+
+## Overview
+
+`R` codes to select the best models fitting three-way tables.
+
+- `dplyr`
+- `broom`
+- `plyr`
+
+packages would be used. Install these before use this set.
+
+### `_common.R`
+
+1. define `find_xname()`: used in `fitted_val.R`, `goodness_fit.R`
+2. modify `broom::tidy.anova()` function
+
+### `model_threeway.R`
+
+function `model_loglin()`
+
+- fit `glm` for given data
+- for _every pair of independence model_
+
+### `goodness_fit.R`
+
+function `good_loglin()`
+
+- for fitted `model_loglin`,
+- compute **goodness-of-fit**
+- implement with `purrr::map()` and `dplyr::bind_rows()`
+
+### `fitted_val.R`
+
+function `fit_loglin()`
+
+- for fitted `model_loglin`,
+- compute **fitted values** for _every pair of independence model_
+- implement with `purrr::map()` and `plyr::join_all()`
+
+***
+
+This file will show how these functions can be applied.
+
+1. call `tidyverse` and `broom` libraries, and the other functions with `r/_common.R`
+2. fit with `model_loglin()`
+3. goodness-of-fit with `good_loglin()`
+4. choosing the best model based on the goodness-of-fit statistic
+5. compute fitted values with `fitted_val`
+
+## Begin
 
 ```{r}
 source("r/_common.R") # tidyverse and broom
@@ -58,9 +101,9 @@ Data from @Agresti:2012aa would be used.
 
 Long data format as above is easy to fit loglinear model.
 
-# Fitting GLMs
+## Fitting GLMs
 
-## in hand
+### in hand
 
 We can write every formula in hand. However, it is annoying.
 
@@ -80,7 +123,7 @@ subs_hierarchy <-
   )
 ```
 
-## Defining function
+### Defining function
 
 ```{r}
 source("r/model_threeway.R")
@@ -167,7 +210,3 @@ subs_hierarchy %>%
   plyr::join_all(by = c("count", "alcohol", "cigarettes", "marijuana")) %>% 
   pander::pander()
 ```
-
-
-
-
