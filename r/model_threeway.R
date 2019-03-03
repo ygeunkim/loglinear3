@@ -9,11 +9,12 @@
 # three: three-factor interaction / saturated model, (XYZ)
 #-------------------------------------------
 
-model_loglin <- function(.data, yname, glm_fam = gaussian(), ...) {
+model_loglin <- function(.data, yname, glm_fam = poisson(), ...) {
   #------------------------------------------------------------------------------#
   # .data to be fit glm                                                          #
   # yname character object which is response variable                            #
   # glm_fam function corresponding to family option of glm(), error distribution #
+  # Since loglinear model, glm_fam = poisson() is set to be default              #
   #------------------------------------------------------------------------------#
   xname <-
     .data %>% 
