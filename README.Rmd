@@ -248,3 +248,6 @@ subs_hierarchy %>%
   plyr::join_all(by = c("count", "alcohol", "cigarettes", "marijuana")) %>% 
   pander::pander()
 ```
+
+## References
+

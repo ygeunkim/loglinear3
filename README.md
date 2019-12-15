@@ -424,6 +424,8 @@ Table continues below
 |                                              1.383                                               |                                                                2                                                                |
 |                                              279.6                                               |                                                               279                                                               |
 
+## References
+
 <div id="refs" class="references hanging-indent">
 
 <div id="ref-Agresti:2012aa">
