@@ -72,9 +72,8 @@ Frow now on, this document will show how these functions can be applied.
 
 ## Loading Functions
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 # install.packages("httr")
-# install.packages("stringr")
 library(httr)
 git_api <- GET("https://api.github.com/repos/ygeunkim/loglinear3/git/trees/master?recursive=1")
 stop_for_status(git_api)

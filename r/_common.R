@@ -22,6 +22,7 @@ find_xname <- function(fit) {
 # https://github.com/tidymodels/broom/blob/master/R/stats-anova-tidiers.R
 #------------------------------------------------------------------------
 tidy.anova <- function(x, ...) {
+  # there are many possible column names that need to be transformed
   renamers <- c(
     "AIC" = "AIC",              # merMod
     "BIC" = "BIC",              # merMod
@@ -39,6 +40,7 @@ tidy.anova <- function(x, ...) {
     "F" = "statistic",
     "Chisq" = "statistic",
     "P(>|Chi|)" = "p.value",
+    "Pr(>|Chi|)" = "p.value",
     "Pr(>Chi)" = "p.value",
     "Pr..Chisq." = "p.value",
     "Pr..Chi." = "p.value",
@@ -48,13 +50,14 @@ tidy.anova <- function(x, ...) {
     "LR Chisq" = "statistic",
     "edf" = "edf",
     "Ref.df" = "ref.df",
+    "loglik" = "logLik",
     "Deviance" = "deviance", # glm object
     "Resid. Df" = "resid.df", # glm object
     "Resid. Dev" = "resid.dev" # glm object
   )
-
+  
   names(renamers) <- make.names(names(renamers))
-
+  
   ret <- fix_data_frame(x)
   unknown_cols <- setdiff(colnames(ret), c("term", names(renamers)))
   if (length(unknown_cols) > 0) {
@@ -64,9 +67,9 @@ tidy.anova <- function(x, ...) {
       paste(unknown_cols, collapse = ", ")
     )
   }
-
+  
   colnames(ret) <- dplyr::recode(colnames(ret), !!!renamers)
-
+  
   if("term" %in% names(ret)){
     # if rows had names, strip whitespace in them
     ret <- mutate(ret, term = stringr::str_trim(term))
