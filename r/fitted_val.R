@@ -2,7 +2,7 @@
 # Fitted values for each independece model #
 #------------------------------------------#
 
-source("r/_common.R")
+source("https://raw.githubusercontent.com/ygeunkim/loglinear3/master/r/_common.R")
 
 fit_loglin <- function(x, ...) {
   #-----------------------------#

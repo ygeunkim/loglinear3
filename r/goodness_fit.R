@@ -2,7 +2,7 @@
 # Calculating chi-square goodness-of-fit #
 #----------------------------------------#
 
-source("r/_common.R")
+source("https://raw.githubusercontent.com/ygeunkim/loglinear3/master/r/_common.R")
 
 good_loglin <- function(x, test = "LRT", ...) {
   #-----------------------------#
