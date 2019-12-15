@@ -53,19 +53,49 @@ Frow now on, this document will show how these functions can be applied.
 4.  choosing the best model based on the goodness-of-fit statistic
 5.  compute fitted values with `fitted_val`
 
-## Beginning
+## Loading Functions
 
 ``` r
-source("r/_common.R")
-#> ── Attaching packages ────────────────────────────────────────────────── tidyverse 1.2.1 ──
-#> ✔ ggplot2 3.1.0       ✔ purrr   0.3.0  
-#> ✔ tibble  2.0.1       ✔ dplyr   0.8.0.1
-#> ✔ tidyr   0.8.2       ✔ stringr 1.4.0  
-#> ✔ readr   1.3.1       ✔ forcats 0.4.0
-#> ── Conflicts ───────────────────────────────────────────────────── tidyverse_conflicts() ──
-#> ✖ dplyr::filter() masks stats::filter()
-#> ✖ dplyr::lag()    masks stats::lag()
+# install.packages("httr")
+# install.packages("stringr")
+library(httr)
+git_api <- GET("https://api.github.com/repos/ygeunkim/loglinear3/git/trees/master?recursive=1")
+stop_for_status(git_api)
+repo_list <- unlist(lapply(content(git_api)$tree, "[", "path"), use.names = FALSE)
+# R files in r folder -----------------------------
+repo_list <- stringr::str_subset(repo_list, pattern = "^r/")
+repo_list <- stringr::str_c("https://raw.githubusercontent.com/ygeunkim/loglinear3/master/", repo_list)
+# source every file
+sapply(repo_list, source)
+#> ── Attaching packages ───────────── tidyverse 1.3.0 ──
+#> ✓ ggplot2 3.2.1     ✓ purrr   0.3.3
+#> ✓ tibble  2.1.3     ✓ dplyr   0.8.3
+#> ✓ tidyr   1.0.0     ✓ stringr 1.4.0
+#> ✓ readr   1.3.1     ✓ forcats 0.4.0
+#> ── Conflicts ──────────────── tidyverse_conflicts() ──
+#> x dplyr::filter() masks stats::filter()
+#> x dplyr::lag()    masks stats::lag()
+#>         https://raw.githubusercontent.com/ygeunkim/loglinear3/master/r/_common.R
+#> value   ?                                                                       
+#> visible FALSE                                                                   
+#>         https://raw.githubusercontent.com/ygeunkim/loglinear3/master/r/fitted_val.R
+#> value   ?                                                                          
+#> visible FALSE                                                                      
+#>         https://raw.githubusercontent.com/ygeunkim/loglinear3/master/r/goodness_fit.R
+#> value   ?                                                                            
+#> visible FALSE                                                                        
+#>         https://raw.githubusercontent.com/ygeunkim/loglinear3/master/r/model_threeway.R
+#> value   ?                                                                              
+#> visible FALSE
 ```
+
+## Beginning
+
+<!-- ```{r} -->
+
+<!-- source("r/_common.R") -->
+
+<!-- ``` -->
 
 `tidyverse` and `broom` are loaded. Here we should modify `tidy`
 function of tidymodels (2018). `tidy.anova()` is not defined for
@@ -169,18 +199,20 @@ We can write every formula in hand. However, it is annoying.
               data = ., family = poisson())
   ))
 #> # A tibble: 1 x 5
-#>   indep     ac_m      amcm      acamcm    acm      
-#>   <list>    <list>    <list>    <list>    <list>   
-#> 1 <S3: glm> <S3: glm> <S3: glm> <S3: glm> <S3: glm>
+#>   indep  ac_m   amcm   acamcm acm   
+#>   <list> <list> <list> <list> <list>
+#> 1 <glm>  <glm>  <glm>  <glm>  <glm>
 ```
 
 ### Defining function
 
 Function can be defined for more general usage. See `r/model_threeway.R`
 
-``` r
-source("r/model_threeway.R")
-```
+<!-- ```{r} -->
+
+<!-- source("r/model_threeway.R") -->
+
+<!-- ``` -->
 
 `model_loglin()` fits loglinear model for every pair of independence
 model.
@@ -191,15 +223,14 @@ model.
     Since we are fitting loglinear model, `poisson()` is set to be
     default.
 
-It returns `tibble` with list
-element.
+It returns `tibble` with list element.
 
 ``` r
 (subs_hierarchy <- model_loglin(substance, yname = "count", glm_fam = poisson()))
 #> # A tibble: 1 x 9
 #>   indep joint1 joint2 joint3 conditional1 conditional2 conditional3 homogen
 #>   <lis> <list> <list> <list> <list>       <list>       <list>       <list> 
-#> 1 <S3:… <S3: … <S3: … <S3: … <S3: glm>    <S3: glm>    <S3: glm>    <S3: g…
+#> 1 <glm> <glm>  <glm>  <glm>  <glm>        <glm>        <glm>        <glm>  
 #> # … with 1 more variable: threefac <list>
 ```
 
@@ -236,9 +267,11 @@ n\_{ijk}\\ln\\frac{n\_{ijk}}{\\hat\\mu\_{ijk}}](https://latex.codecogs.com/png.l
 with **residual df = the number of cell count - the number of
 non-redundant parameters**
 
-``` r
-source("r/goodness_fit.R")
-```
+<!-- ```{r} -->
+
+<!-- source("r/goodness_fit.R") -->
+
+<!-- ``` -->
 
 `good_loglin()` calculates the above statistic for given option `test`.
 `test = "LRT"` option of `anova.glm()` produces
@@ -320,9 +353,11 @@ Thus, **we use the model `(AC, AM, CM)`**
 
 ## Fitted values
 
-``` r
-source("r/fitted_val.R")
-```
+<!-- ```{r} -->
+
+<!-- source("r/fitted_val.R") -->
+
+<!-- ``` -->
 
 `fit_loglin()` computes fitted values for each independent model. Use
 this function with `purrr::map()` and `plyr::join_all()`. In
@@ -346,8 +381,7 @@ subs_hierarchy %>%
 |   2   |   no    |     no     |    yes    |              47.33               |
 |  279  |   no    |     no     |    no     |              64.88               |
 
-Table continues
-below
+Table continues below
 
 | alcohol + cigarettes + marijuana + cigarettes:marijuana | alcohol + cigarettes + marijuana + alcohol:marijuana |
 | :-----------------------------------------------------: | :--------------------------------------------------: |
@@ -360,8 +394,7 @@ below
 |                          6.609                          |                        1.716                         |
 |                          105.6                          |                        110.5                         |
 
-Table continues
-below
+Table continues below
 
 | alcohol + cigarettes + marijuana + alcohol:cigarettes | alcohol + cigarettes + marijuana + alcohol:marijuana + cigarettes:marijuana |
 | :---------------------------------------------------: | :-------------------------------------------------------------------------: |
@@ -374,8 +407,7 @@ below
 |                         118.5                         |                                    0.24                                     |
 |                         162.5                         |                                    179.8                                    |
 
-Table continues
-below
+Table continues below
 
 | alcohol + cigarettes + marijuana + alcohol:cigarettes + cigarettes:marijuana | alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana |
 | :--------------------------------------------------------------------------: | :-----------------------------------------------------------------------: |
@@ -388,8 +420,7 @@ below
 |                                    16.55                                     |                                   4.297                                   |
 |                                    264.4                                     |                                   276.7                                   |
 
-Table continues
-below
+Table continues below
 
 | alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana | alcohol + cigarettes + marijuana + alcohol:cigarettes + alcohol:marijuana + cigarettes:marijuana + alcohol:cigarettes:marijuana |
 | :----------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------------------: |
@@ -402,7 +433,7 @@ below
 |                                              1.383                                               |                                                                2                                                                |
 |                                              279.6                                               |                                                               279                                                               |
 
-<div id="refs" class="references">
+<div id="refs" class="references hanging-indent">
 
 <div id="ref-Agresti:2012aa">
 

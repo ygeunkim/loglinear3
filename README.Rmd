@@ -70,11 +70,28 @@ Frow now on, this document will show how these functions can be applied.
 4. choosing the best model based on the goodness-of-fit statistic
 5. compute fitted values with `fitted_val`
 
-## Beginning
+## Loading Functions
 
 ```{r}
-source("r/_common.R")
+# install.packages("httr")
+# install.packages("stringr")
+library(httr)
+git_api <- GET("https://api.github.com/repos/ygeunkim/loglinear3/git/trees/master?recursive=1")
+stop_for_status(git_api)
+repo_list <- unlist(lapply(content(git_api)$tree, "[", "path"), use.names = FALSE)
+# R files in r folder -----------------------------
+repo_list <- stringr::str_subset(repo_list, pattern = "^r/")
+repo_list <- stringr::str_c("https://raw.githubusercontent.com/ygeunkim/loglinear3/master/", repo_list)
+# source every file
+sapply(repo_list, source)
 ```
+
+
+## Beginning
+
+<!-- ```{r} -->
+<!-- source("r/_common.R") -->
+<!-- ``` -->
 
 `tidyverse` and `broom` are loaded. Here we should modify `tidy` function of @broom. `tidy.anova()` is not defined for `anova.glm`, so we should add more elements in `renamers` in the function. Using the original `tidy` gives `warning message`.
 
@@ -147,9 +164,9 @@ We can write every formula in hand. However, it is annoying.
 
 Function can be defined for more general usage. See `r/model_threeway.R`
 
-```{r}
-source("r/model_threeway.R")
-```
+<!-- ```{r} -->
+<!-- source("r/model_threeway.R") -->
+<!-- ``` -->
 
 `model_loglin()` fits loglinear model for every pair of independence model.
 
@@ -179,9 +196,9 @@ $$X^2 = \sum\frac{(n_{ijk} - \hat\mu_{ijk})^2}{\hat\mu_{ijk}}$$
 
 with **residual df = the number of cell count - the number of non-redundant parameters**
 
-```{r}
-source("r/goodness_fit.R")
-```
+<!-- ```{r} -->
+<!-- source("r/goodness_fit.R") -->
+<!-- ``` -->
 
 `good_loglin()` calculates the above statistic for given option `test`. `test = "LRT"` option of `anova.glm()` produces $G^2$. `test = Chisq` gives $X^2$. As noticed, this function _is designed to be_ applied with `purrr::map()` and `dplyr::bind_rows()`.
 
@@ -220,9 +237,9 @@ Thus, **we use the model `(AC, AM, CM)`**
 
 ## Fitted values
 
-```{r}
-source("r/fitted_val.R")
-```
+<!-- ```{r} -->
+<!-- source("r/fitted_val.R") -->
+<!-- ``` -->
 
 `fit_loglin()` computes fitted values for each independent model. Use this function with `purrr::map()` and `plyr::join_all()`. In `plyr::join_all()`, every variable name including response is written.
 
